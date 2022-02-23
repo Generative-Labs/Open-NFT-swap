@@ -1,7 +1,7 @@
 pragma solidity ^0.8.0;
 
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol";
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/ERC721.sol";
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol";
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/IERC721.sol";
 
 
 contract Transctor {
@@ -9,13 +9,13 @@ contract Transctor {
     event initializedExchange(bytes32);
 
     struct ExchangeMetaData {
-        ERC20[] erc20sA;
+        IERC20[] erc20sA;
         uint[] amountsA; 
-        ERC721[] NFTA;
+        IERC721[] NFTA;
         uint[][] idA; 
-        ERC20[] erc20sB; 
+        IERC20[] erc20sB; 
         uint[] amountsB;
-        ERC721[] NFTB;
+        IERC721[] NFTB;
         uint[][] idB;  
         address A;
         address B;
@@ -29,14 +29,14 @@ contract Transctor {
 
 
     function initializeExchange(
-        ERC20[] memory erc20sA, uint[] memory amountsA, 
-        ERC721[] memory NFTA, uint[][] memory idA,
-        ERC20[] memory erc20sB, uint[] memory amountsB, 
-        ERC721[] memory NFTB, uint[][] memory idB, address B, uint expiration) public returns (bytes32) {
+        IERC20[] memory erc20sA, uint[] memory amountsA, 
+        IERC721[] memory NFTA, uint[][] memory idA,
+        IERC20[] memory erc20sB, uint[] memory amountsB, 
+        IERC721[] memory NFTB, uint[][] memory idB, address B, uint expiration) public returns (bytes32) {
         require(B != msg.sender, "cannot transact with self.");
         require(erc20sA.length == amountsA.length, "Length of tokens and token amounts not equal (A).");
         require(erc20sB.length == amountsB.length, "Length of tokens and token amounts not equal (B).");
-        bytes32 key = keccak256(abi.encodePacked(erc20sA, amountsA, erc20sB, amountsB, msg.sender, B));
+        bytes32 key = keccak256(abi.encodePacked(erc20sA, amountsA, erc20sB, amountsB, NFTA, NFTB, msg.sender, B));
 
         exchangeData[msg.sender][B] = ExchangeMetaData(
             erc20sA,
@@ -54,11 +54,8 @@ contract Transctor {
             key,
             expiration
         );
-
+        emit initializedExchange(key);
         return key;
-
-
-
     }
 
     function cancelExchange(address B) public {
